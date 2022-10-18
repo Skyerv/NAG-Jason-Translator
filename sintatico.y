@@ -8,8 +8,6 @@ extern int yylex();
 extern int yyparse();
 extern int yyerror();
 
-int contTab = -1;
-int contenum = 0;
 FILE *yyin;
 FILE *file_md;
 void fphash(int hashcount);
@@ -32,17 +30,17 @@ void fpenum(int contenum, int contTab);
 agente: crencas objetivos planos
 
 /* INITIAL BELIEFS */
-crencas: '{' nomeCrenca '}'
+crencas: '{' nomeCrenca {ftranslatefunction(nomeCrenca);} '}'
 
-nomeCrenca: NAME {fprintf(file_jason," %s", $1);}
+nomeCrenca: NAME
 
 /* GOALS */
-objetivos: '{' nomeObjetivo ';}'
+objetivos: '{' nomeObjetivo {ftranslatefunction(nomeObjetivo);} ';}'
 
-nomeObjetivo: NAME {fprintf(file_jason," %s", $1);}
+nomeObjetivo: NAME
 
 /* PLANS */
-planos: {fprintf(file_jason,"@");} '{' nomePlano ';}' {fprintf(file_md,"  \r\n");}
+planos: {fprintf(file_jason,"@");} '{' nomePlano ';}' {ftranslatefunction(nomePlano);} {fprintf(file_md,"  \r\n");}
 
 nomePlano: NAME tuplaPlano
 
@@ -50,10 +48,10 @@ tuplaPlano: {fprintf(file_jason,"+!");} '(' eventoGatilho ';'
     {fprintf(file_jason,"\n     : ");} contexto ';' 
     {fprintf(file_jason,"\n     <- ");} corpo ')' {fprintf(file_jason,".\n     ");}
 
-eventoGatilho: NAME {fprintf(file_jason," %s", $1);}
+eventoGatilho: NAME {ftranslatefunction(NAME);}
 
 contexto: expressaoLogica
-contexto: NAME
+contexto: NAME 
 contexto: ;
 
 expressaoLogica: NAME 'E' NAME {ftranslatefunction(NAME);} {fprintf(file_jason," & ");} {ftranslatefunction(NAME);} 
@@ -62,7 +60,7 @@ expressaoLogica: 'NAO' NAME {fprintf(file_jason,"NAO ");} {ftranslatefunction(NA
 
 corpo: '{' formulasCorpo ';}'
 
-formulasCorpo: NAME {fprintf(file_jason," %s", $1);}
+formulasCorpo: NAME {ftranslatefunction(NAME);}
 
 %%
 int main(int argc, char *argv[]){
@@ -124,13 +122,6 @@ int main(int argc, char *argv[]){
 
 int yyerror (char *s){
   return printf("Erro encontrado: %s linha %i\n", s, yylineno);
-}
-
-void fphash(int hashcount){
-	for(; hashcount > 0; hashcount--){
-		fprintf(file_jason,"	");
-	}
-	fprintf(file_jason,"* ");
 }
 
 void ftranslatefunction (char *s) {
