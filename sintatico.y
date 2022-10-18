@@ -21,8 +21,7 @@ FILE *file_nag;
 %token <s> NAME
 %token <ival> NUMBER
 
-%token 
-%token 
+%token E OU NAO
 %right '['
 
 %%
@@ -53,9 +52,9 @@ contexto: expressaoLogica
 contexto: NAME 
 contexto: ;
 
-expressaoLogica: NAME 'E' NAME {ftranslatefunction(NAME);} {fprintf(file_jason," & ");} {ftranslatefunction(NAME);} 
-expressaoLogica: NAME 'OU' NAME {ftranslatefunction(NAME);} {fprintf(file_jason," | ");} {ftranslatefunction(NAME);} 
-expressaoLogica: 'NAO' NAME {fprintf(file_jason,"NAO ");} {ftranslatefunction(NAME);} 
+expressaoLogica: NAME E NAME {ftranslatefunction(NAME);} {fprintf(file_jason," & ");} {ftranslatefunction(NAME);} 
+expressaoLogica: NAME OU NAME {ftranslatefunction(NAME);} {fprintf(file_jason," | ");} {ftranslatefunction(NAME);} 
+expressaoLogica: NAO NAME {fprintf(file_jason,"NAO ");} {ftranslatefunction(NAME);} 
 
 corpo: '{' formulasCorpo ';}'
 
