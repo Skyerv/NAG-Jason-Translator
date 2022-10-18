@@ -16,7 +16,7 @@ word				({marks}|{numbers}|{letter})+
 "}"			        	{ return yytext[0]; }
 "crencas"			    { return CRENCAS; }
 "objetivos"		        { return OBJETIVOS; }
-"\\usepackage"			{ return PACKAGE; }
+"teste"					{ return PACKAGE; }
 "\\title"			    { return TITLE; }
 "\\date"			    { return DATE; }
 "\\begin{document}"		{ return BEGDOC; }
