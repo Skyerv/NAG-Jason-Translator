@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 extern int yylineno;
 extern int yylex();
@@ -9,9 +10,7 @@ extern int yyparse();
 extern int yyerror();
 
 FILE *yyin;
-FILE *file_md;
-void fphash(int hashcount);
-void fpenum(int contenum, int contTab);
+FILE *file_nag;
 %}
 
 %union {
@@ -71,7 +70,7 @@ int main(int argc, char *argv[]){
     FILE *file_nag = NULL;
 	file_jason = NULL;
 
-	char exts[3][4] = { "asl" };	// aceita a extensão .asl
+	char exts[3][4] = { "txt" };	// aceita a extensão .asl
 
     int size_f_jason = (int) strlen(argv[1]), aux = 1;
     char *name_f_jason = (char *) malloc(sizeof(char) * (size_f_jason + 4));
@@ -95,8 +94,9 @@ int main(int argc, char *argv[]){
     }
 
     *(name_f_jason + (size_f_jason - 1)) = 0; // inserindo \n no fim da string
-    *(name_f_jason + (size_f_jason - 2)) = 100;   //inserindo letra d
-    *(name_f_jason + (size_f_jason - 3)) = 109;   //inserindo letra m
+    *(name_f_jason + (size_f_jason - 2)) = 97;   //inserindo letra a
+    *(name_f_jason + (size_f_jason - 3)) = 115;   //inserindo letra s
+    *(name_f_jason + (size_f_jason - 4)) = 108;   //inserindo letra l
 
     file_nag = fopen(argv[1], "r+");
     file_jason = fopen(name_f_jason, "w+");
@@ -104,15 +104,14 @@ int main(int argc, char *argv[]){
     printf("[*] Abrindo arquivos %s\n", argv[1]);
 
     if(!(file_nag)){  //Verificando o ponteiro do arquivo nag
-        printf("[!] Arquivo nag não encontrado!\n");
+        printf("[!] Arquivo nag não encontrado\n");
         exit(1);
-    }else   printf("[+] Arquivo nag carregado com sucesso!\n");
+    }else   printf("[+] Arquivo nag carregado com sucesso\n");
 
     if(!(file_jason)){
-        printf("[!] Não for possivel criar o arquivo Markdown!\n");
+        printf("[!] Não for possivel criar o arquivo Jason\n");
         exit(1);
-    }else printf("[+] Arquivo Markdown criado com sucesso!\n");
-
+    }else printf("[+] Arquivo Jason criado com sucesso\n");
     
 	yyin = file_nag;
 	file_jason = fopen(name_f_jason,"w+");
@@ -126,7 +125,7 @@ int yyerror (char *s){
 
 void ftranslatefunction (char *s) {
   int i = 0;
-  char *name, *param, *converted, *token1, *token2, *aux;
+  char *param;
 
   while (!isupper (s[i]))
     {
