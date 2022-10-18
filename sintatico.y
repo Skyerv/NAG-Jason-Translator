@@ -56,9 +56,9 @@ contexto: expressaoLogica
 contexto: NAME
 contexto: ;
 
-expressaoLogica: NAME 'E' NAME {fprintf(file_jason,"%s & %s", $1, $3);}
-expressaoLogica: NAME 'OU' NAME {fprintf(file_jason,"%s | %s", $1, $3);}
-expressaoLogica: 'NAO' NAME {fprintf(file_jason,"not %s", $2);}
+expressaoLogica: NAME 'E' NAME {ftranslatefunction(NAME);} {fprintf(file_jason," & ");} {ftranslatefunction(NAME);} 
+expressaoLogica: NAME 'OU' NAME {ftranslatefunction(NAME);} {fprintf(file_jason," | ");} {ftranslatefunction(NAME);} 
+expressaoLogica: 'NAO' NAME {fprintf(file_jason,"NAO ");} {ftranslatefunction(NAME);} 
 
 corpo: '{' formulasCorpo ';}'
 
@@ -133,17 +133,16 @@ void fphash(int hashcount){
 	fprintf(file_jason,"* ");
 }
 
-void ftranslatefunction(char *s){
-    int i = 0;
-    char *name, *param, *converted;
+void ftranslatefunction (char *s) {
+  int i = 0;
+  char *name, *param, *converted, *token1, *token2, *aux;
 
-    while(!isUpper(s[i])){
-        i++;
+  while (!isupper (s[i]))
+    {
+      printf ("%c", s[i]);
+      i++;
     }
-
-    name = strtok(s, s[i]);
-    param = strtok(NULL, " ");
-    converted = strcat(name, param);
-
-    fprintf(file_jason,"%s(%s)", name, param);
+    
+    param = &s[i];
+    printf("(%s)\n", param);
 }
