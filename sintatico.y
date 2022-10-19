@@ -3,14 +3,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "sintatico.tab.h"
 
 extern int yylineno;
 extern int yylex();
 extern int yyparse();
 extern int yyerror();
 
+void ftranslatefunction(char *s);
+
 FILE *yyin;
-FILE *file_nag;
+FILE *file_jason;
 %}
 
 %union {
@@ -18,84 +21,94 @@ FILE *file_nag;
 	int ival;
 }
 
-%token <s> NAME
+%type <s> nomeCrenca objetivos planos nomeObjetivo nomePlano eventoGatilho contexto corpo expressaoLogica formulasCorpo listaCrenca listaObjetivo listaPlano
+
+%token <s> NAME CRENCAS OBJETIVOS PLANOS
 %token <ival> NUMBER
 
 %token E OU NAO
 %right '['
 
 %%
-agente: crencas objetivos planos
+agente: NAME CRENCAS crencas OBJETIVOS objetivos PLANOS planos { fprintf(file_jason, $1); }
 
 /* INITIAL BELIEFS */
-crencas: '{' nomeCrenca {ftranslatefunction(nomeCrenca);} '}'
+crencas         : '{' listaCrenca '}'    { ftranslatefunction($2); }
 
-nomeCrenca: NAME
+listaCrenca     : nomeCrenca ';' listaCrenca
+                ;
+
+nomeCrenca      : NAME                  { $$ = $1 }
 
 /* GOALS */
-objetivos: '{' nomeObjetivo {ftranslatefunction(nomeObjetivo);} ';}'
+objetivos       : '{' listaObjetivo '}' { ftranslatefunction($2); }
 
-nomeObjetivo: NAME
+listaObjetivo   : nomeObjetivo ';' listaObjetivo
+                ;
+
+nomeObjetivo: NAME                  { $$ = $1 }
 
 /* PLANS */
-planos: {fprintf(file_jason,"@");} '{' nomePlano ';}' {ftranslatefunction(nomePlano);} {fprintf(file_md,"  \r\n");}
+planos      : { fprintf(file_jason,"@"); } '{' listaPlano '}'  { fprintf(file_jason,"  \r\n"); }
 
-nomePlano: NAME tuplaPlano
+listaPlano  : nomePlano ';' listaPlano  { ftranslatefunction($1); }
+            ;
 
-tuplaPlano: {fprintf(file_jason,"+!");} '(' eventoGatilho ';'
-    {fprintf(file_jason,"\n     : ");} contexto ';' 
-    {fprintf(file_jason,"\n     <- ");} corpo ')' {fprintf(file_jason,".\n     ");}
+nomePlano   : NAME tuplaPlano        { $$ = $1 }
 
-eventoGatilho: NAME {ftranslatefunction(NAME);}
+tuplaPlano  : { fprintf(file_jason,"+!"); } '(' eventoGatilho ';'
+            | { fprintf(file_jason,"\n     : "); } contexto ';' 
+            | { fprintf(file_jason,"\n     <- "); } corpo ')' { fprintf(file_jason,".\n     ");}
+            ;
 
-contexto: expressaoLogica
-contexto: NAME 
-contexto: ;
+eventoGatilho: NAME {ftranslatefunction($1);}
 
-expressaoLogica: NAME E NAME {ftranslatefunction(NAME);} {fprintf(file_jason," & ");} {ftranslatefunction(NAME);} 
-expressaoLogica: NAME OU NAME {ftranslatefunction(NAME);} {fprintf(file_jason," | ");} {ftranslatefunction(NAME);} 
-expressaoLogica: NAO NAME {fprintf(file_jason,"NAO ");} {ftranslatefunction(NAME);} 
+contexto    : expressaoLogica       { $$ = $1 }
+            | NAME                  { $$ = $1 }
+            ;
 
-corpo: '{' formulasCorpo ';}'
+expressaoLogica     : NAME E NAME { ftranslatefunction(NAME); } { fprintf(file_jason," & "); } { ftranslatefunction(NAME); } 
+                    | NAME OU NAME { ftranslatefunction(NAME); } { fprintf(file_jason," | "); } { ftranslatefunction(NAME); } 
+                    | NAO NAME { fprintf(file_jason,"NAO "); } { ftranslatefunction(NAME); } 
+                    ;
 
-formulasCorpo: NAME {ftranslatefunction(NAME);}
+corpo               : '{' formulasCorpo '}'       { $$ = $2 }
+
+formulasCorpo       : NAME ';' formulasCorpo { ftranslatefunction($1); }
+                    ;
 
 %%
 int main(int argc, char *argv[]){
-	// argv[1] LaTeX
-
-    printf("\n");
-
     FILE *file_nag = NULL;
 	file_jason = NULL;
 
-	char exts[3][4] = { "txt" };	// aceita a extensão .asl
+    int is_accepted_file = 1;
+	
+    char accepted_ext[4] = "txt";	// aceita a extensão .txt
+    char input_ext[4];
 
-    int size_f_jason = (int) strlen(argv[1]), aux = 1;
+    int size_f_jason = (int) strlen("bob.txt");
     char *name_f_jason = (char *) malloc(sizeof(char) * (size_f_jason + 4));
-    strcpy(name_f_jason, argv[1]);
-
-    //Verificando a extensao do Arquivo
-    char ext[4];
+    strcpy(name_f_jason, "bob.txt");
 
     for(int i = 1, j=0; i <= 3; i++, j++){
         char aux = *(name_f_jason + (size_f_jason - i));
-        *(ext+j) = aux;
+        *(input_ext+j) = aux;
     }
 
-	for(int i=0; i<3; i++){
-		if(!(strcmp(ext, exts[i])))
-			aux=0;
-	}
-	if(aux){
+	if(!(strcmp(input_ext, accepted_ext))) {
+		is_accepted_file = 0;
+    }
+    
+	if(!is_accepted_file){
         printf("[!] Extensao invalida \n");
         exit(1);
     }
 
-    *(name_f_jason + (size_f_jason - 1)) = 0; // inserindo \n no fim da string
-    *(name_f_jason + (size_f_jason - 2)) = 97;   //inserindo letra a
-    *(name_f_jason + (size_f_jason - 3)) = 115;   //inserindo letra s
-    *(name_f_jason + (size_f_jason - 4)) = 108;   //inserindo letra l
+    *(name_f_jason + (size_f_jason - 0)) = 0; // inserindo \n no fim da string
+    *(name_f_jason + (size_f_jason - 1)) = 108;   //inserindo letra l
+    *(name_f_jason + (size_f_jason - 2)) = 115;   //inserindo letra s
+    *(name_f_jason + (size_f_jason - 3)) = 97;   //inserindo letra a
 
     file_nag = fopen(argv[1], "r+");
     file_jason = fopen(name_f_jason, "w+");
@@ -128,10 +141,10 @@ void ftranslatefunction (char *s) {
 
   while (!isupper (s[i]))
     {
-      printf ("%c", s[i]);
+      fprintf(file_jason, "%s", s[i]);
       i++;
     }
     
     param = &s[i];
-    printf("(%s)\n", param);
+    fprintf(file_jason, "%s", param);
 }

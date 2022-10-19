@@ -6,11 +6,12 @@
 	#include "sintatico.tab.h"
 %}
 
-minusculas			[a-z]
-maiusculas			[A-Z]
+letter				[a-zA-Z]
 numbers				[0-9]
-marks				(\.|\,|\!|\?|\:|\;|"'"|\/|\(|\))
-palavra				({maiusculas} | {numbers} | {minusculas} | {marks})+
+word				({numbers}|{letter})+
+nomeCrenca			({word})
+nomeObjetivo		({word})
+nomePlano			({word})
 %%
 
 "{"				        { return yytext[0]; }
@@ -18,7 +19,11 @@ palavra				({maiusculas} | {numbers} | {minusculas} | {marks})+
 "E"				        { return E; }
 "OU"			        { return OU; }
 "NAO"			        { return NAO; }
-{palavra}			    { yylval.s = strdup(yytext); return NAME; }
+{word}			    	{ yylval.s = strdup(yytext); return NAME; }
+"crencas:"				{ return CRENCAS; }
+"objetivos:"			{ return OBJETIVOS; }
+"planos:"				{ return PLANOS; }
+
 "//".*					/* Ignora comentarios */
 "/*".*"*/" 				/* Ignora comentarios */
 [ \t] 					/* ignora espaco em branco */

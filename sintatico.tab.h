@@ -54,7 +54,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 16 "sintatico.y"
+#line 19 "sintatico.y"
 
 	char* s;
 	int ival;
