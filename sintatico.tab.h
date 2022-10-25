@@ -40,10 +40,13 @@
       know about them.  */
    enum yytokentype {
      NAME = 258,
-     NUMBER = 259,
-     E = 260,
-     OU = 261,
-     NAO = 262
+     CRENCAS = 259,
+     OBJETIVOS = 260,
+     PLANOS = 261,
+     NUMBER = 262,
+     E = 263,
+     OU = 264,
+     NAO = 265
    };
 #endif
 
@@ -54,7 +57,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 19 "sintatico.y"
+#line 27 "sintatico.y"
 
 	char* s;
 	int ival;
@@ -62,7 +65,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 66 "sintatico.tab.h"
+#line 69 "sintatico.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
