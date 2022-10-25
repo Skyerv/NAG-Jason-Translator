@@ -37,11 +37,13 @@ FILE *file_jason;
 %token <ival> NUMBER
 
 %token E OU NAO
-%right '['
 
 %%
-agente: NAME CRENCAS crencas OBJETIVOS objetivos PLANOS planos {  }
 
+
+
+
+agente: NAME CRENCAS crencas OBJETIVOS objetivos PLANOS planos
 /* INITIAL BELIEFS */
 crencas             : '{' listaCrenca '}'    {fprintf(file_jason, "\n");}
 
@@ -162,7 +164,6 @@ void ftranslatefunction (char *s) {
       param = &s[i];
       fprintf(file_jason, "(%s)", param);
     }
-    
 }
 
 void printfEventoGatilho (char *s){
@@ -191,5 +192,4 @@ void printfGoals (char *s){
 void replaceWithDot(){
   fseek(file_jason, -3, SEEK_END);
   fputs(".\n\n", file_jason);
-  //printf("Posição do ponteiro: %ld \n", ftell(file_jason));
 }
