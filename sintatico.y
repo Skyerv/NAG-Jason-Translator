@@ -10,7 +10,15 @@ extern int yylex();
 extern int yyparse();
 extern int yyerror();
 
-void ftranslatefunction(char *s);
+void ftranslatefunction (char *s);
+
+void printfGoals (char *s);
+void printfBeliefs (char *s);
+void printTeste(char *s);
+void printfEventoGatilho (char *s);
+void printfFormulasCorpo (char *s);
+
+void replaceWithDot();
 
 FILE *yyin;
 FILE *file_jason;
@@ -21,66 +29,75 @@ FILE *file_jason;
 	int ival;
 }
 
-%type <s> nomeCrenca objetivos planos nomeObjetivo nomePlano eventoGatilho contexto corpo expressaoLogica formulasCorpo listaCrenca listaObjetivo listaPlano
+
+
+%type <s> listaCrenca nomeCrenca listaObjetivo nomeObjetivo listaPlano nomePlano contexto corpo
 
 %token <s> NAME CRENCAS OBJETIVOS PLANOS
 %token <ival> NUMBER
 
 %token E OU NAO
-%right '['
 
 %%
-agente: NAME CRENCAS crencas OBJETIVOS objetivos PLANOS planos { fprintf(file_jason, $1); }
 
+
+
+
+agente: NAME CRENCAS crencas OBJETIVOS objetivos PLANOS planos
 /* INITIAL BELIEFS */
-crencas         : '{' listaCrenca '}'    { ftranslatefunction($2); }
+crencas             : '{' listaCrenca '}'    {fprintf(file_jason, "\n");}
 
-listaCrenca     : nomeCrenca ';' listaCrenca
-                ;
-
-nomeCrenca      : NAME                  { $$ = $1 }
-
-/* GOALS */
-objetivos       : '{' listaObjetivo '}' { ftranslatefunction($2); }
-
-listaObjetivo   : nomeObjetivo ';' listaObjetivo
-                ;
-
-nomeObjetivo: NAME                  { $$ = $1 }
-
-/* PLANS */
-planos      : { fprintf(file_jason,"@"); } '{' listaPlano '}'  { fprintf(file_jason,"  \r\n"); }
-
-listaPlano  : nomePlano ';' listaPlano  { ftranslatefunction($1); }
-            ;
-
-nomePlano   : NAME tuplaPlano        { $$ = $1 }
-
-tuplaPlano  : { fprintf(file_jason,"+!"); } '(' eventoGatilho ';'
-            | { fprintf(file_jason,"\n     : "); } contexto ';' 
-            | { fprintf(file_jason,"\n     <- "); } corpo ')' { fprintf(file_jason,".\n     ");}
-            ;
-
-eventoGatilho: NAME {ftranslatefunction($1);}
-
-contexto    : expressaoLogica       { $$ = $1 }
-            | NAME                  { $$ = $1 }
-            ;
-
-expressaoLogica     : NAME E NAME { ftranslatefunction(NAME); } { fprintf(file_jason," & "); } { ftranslatefunction(NAME); } 
-                    | NAME OU NAME { ftranslatefunction(NAME); } { fprintf(file_jason," | "); } { ftranslatefunction(NAME); } 
-                    | NAO NAME { fprintf(file_jason,"NAO "); } { ftranslatefunction(NAME); } 
+listaCrenca         : 
+                    | nomeCrenca ';' listaCrenca  { printfBeliefs($1); }
                     ;
 
-corpo               : '{' formulasCorpo '}'       { $$ = $2 }
+nomeCrenca          : NAME                  { $$ = $1 }
+                    ;
 
-formulasCorpo       : NAME ';' formulasCorpo { ftranslatefunction($1); }
+/* GOALS */
+objetivos           : '{' listaObjetivo '}' {fprintf(file_jason, "\n");}
+
+listaObjetivo       : 
+                    | nomeObjetivo ';' listaObjetivo  { printfGoals($1); }
+                    ;
+
+nomeObjetivo        : NAME                  { $$ = $1 }
+                    ;
+
+/* PLANS */
+planos              : '{' listaPlano '}' 
+
+listaPlano          : 
+                    | nomePlano ';' listaPlano  
+                    ;
+
+nomePlano           : NAME {fprintf(file_jason, "@%s\n", $1); } tuplaPlano 
+                    ;        
+
+ tuplaPlano  :       '(' eventoGatilho ';'  contexto {fprintf(file_jason, " <-\n");} ';' corpo ')' 
+                    ;
+
+eventoGatilho: NAME {printfEventoGatilho($1);}
+
+contexto            : expressaoLogica       
+                    | NAME                  { $$ = $1 }
+                    ;
+
+expressaoLogica     : NAME E NAME   { ftranslatefunction($1); fprintf(file_jason," & "); ftranslatefunction($3); }
+                    | NAME OU NAME  { ftranslatefunction($1); fprintf(file_jason," | "); ftranslatefunction($3); }
+                    | NAO NAME      { fprintf(file_jason,"~"); } { ftranslatefunction($2); } 
+                    ;
+
+corpo               : '{' formulasCorpo {replaceWithDot()} '}' 
+
+formulasCorpo       :
+                    | NAME { printfFormulasCorpo($1); } ';' formulasCorpo 
                     ;
 
 %%
 int main(int argc, char *argv[]){
     FILE *file_nag = NULL;
-	file_jason = NULL;
+	  file_jason = NULL;
 
     int is_accepted_file = 1;
 	
@@ -138,13 +155,41 @@ int yyerror (char *s){
 void ftranslatefunction (char *s) {
   int i = 0;
   char *param;
-
-  while (!isupper (s[i]))
+  while (!isupper (s[i]) && i < strlen(s))
     {
-      fprintf(file_jason, "%s", s[i]);
+      fprintf(file_jason, "%c", s[i]);
       i++;
     }
-    
-    param = &s[i];
-    fprintf(file_jason, "%s", param);
+    if(i != strlen(s)){
+      param = &s[i];
+      fprintf(file_jason, "(%s)", param);
+    }
+}
+
+void printfEventoGatilho (char *s){
+  fprintf(file_jason, "+!");
+  ftranslatefunction(s);
+  fprintf(file_jason, " : ");
+}
+
+void printfFormulasCorpo (char *s){
+  fprintf(file_jason, "   ");
+  ftranslatefunction(s);
+  fprintf(file_jason, ";\n");
+}
+
+void printfBeliefs (char *s){
+  ftranslatefunction(s);
+  fprintf(file_jason, ".\n");
+}
+
+void printfGoals (char *s){
+  fprintf(file_jason, "!");
+  ftranslatefunction(s);
+  fprintf(file_jason, ".\n");
+}
+
+void replaceWithDot(){
+  fseek(file_jason, -3, SEEK_END);
+  fputs(".\n\n", file_jason);
 }
